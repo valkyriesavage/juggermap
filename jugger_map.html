@@ -60,17 +60,52 @@ TODO (valkyrie): look at that image thing for the mapclusterer; it's possible th
 
         // Add ze markers to ze map.
         var name_col = spreadsheet_data[0].indexOf('Name');
+        var city_col = spreadsheet_data[0].indexOf('City');
+        var country_col = spreadsheet_data[0].indexOf('Country');
         var lat_col = spreadsheet_data[0].indexOf('Latitude');
         var lon_col = spreadsheet_data[0].indexOf('Longitude');
+        var url_col = spreadsheet_data[0].indexOf('Website');
+        var contact_person_col = spreadsheet_data[0].indexOf('Contact Person');
+        var contact_method_col = spreadsheet_data[0].indexOf('Contact Method');
+        var image = 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png';
         var markers = spreadsheet_data.slice(1).map(function(club_data, i) {
           // don't go past the end of our data
-          if(club_data[name_col] == '') {return;}
-          // make a marker for it if there is data
-          return new google.maps.Marker({
+          if(club_data[name_col] == '') {
+            return;
+          }
+
+          // otherwise, make a marker for it if there is data
+
+          var info_window_string = `<div id="content">
+            <div id="siteNotice"></div>
+            <h1 id="firstHeading" class="firstHeading">
+              ${club_data[name_col]} : ${club_data[city_col]}, ${club_data[country_col]}
+            </h1>
+            <div id="bodyContent">
+              <p>
+                <a href="${club_data[url_col]}">Website</a>
+              </p>
+              <p>
+                Contact ${club_data[contact_person_col]} via ${club_data[contact_method_col]}
+              </p>
+            </div>
+            </div>`;
+
+          var infowindow = new google.maps.InfoWindow({
+            content: info_window_string
+          });
+
+          var marker = new google.maps.Marker({
             position: {lat: parseFloat(club_data[lat_col]), lng: parseFloat(club_data[lon_col])},
             title: club_data[name_col],
-            animation: google.maps.Animation.DROP
+            animation: google.maps.Animation.DROP,
+            icon: image
           });
+          marker.addListener('click', function() {
+            infowindow.open(map, marker);
+          });
+
+          return marker;
         });
 
         // Add a marker clusterer to manage the markers.
