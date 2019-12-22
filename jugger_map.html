@@ -67,11 +67,16 @@ TODO (valkyrie): look at that image thing for the mapclusterer; it's possible th
         var url_col = spreadsheet_data[0].indexOf('Website');
         var contact_person_col = spreadsheet_data[0].indexOf('Contact Person');
         var contact_method_col = spreadsheet_data[0].indexOf('Contact Method');
+        var active_col = spreadsheet_data[0].indexOf('Active');
         var image = 'skull.png';
         var markers = spreadsheet_data.slice(1).map(function(club_data, i) {
           // don't go past the end of our data
-          if(club_data[name_col] == '') {
+          if (club_data[name_col] == '') {
             return;
+          }
+          // skip things that are inactive
+          if (club_data[active_col] == 'FALSE') {
+            continue;
           }
 
           // otherwise, make a marker for it if there is data
