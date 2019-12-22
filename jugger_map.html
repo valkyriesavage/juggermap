@@ -67,7 +67,8 @@ TODO (valkyrie): look at that image thing for the mapclusterer; it's possible th
         var url_col = spreadsheet_data[0].indexOf('Website');
         var contact_person_col = spreadsheet_data[0].indexOf('Contact Person');
         var contact_method_col = spreadsheet_data[0].indexOf('Contact Method');
-        var active_col = spreadsheet_data[0].indexOf('Active');
+        var active_col = spreadsheet_data[0].indexOf('Active?');
+        var description_col = spreadsheet_data[0].indexOf('Description');
         var image = 'skull.png';
         var markers = spreadsheet_data.slice(1).map(function(club_data, i) {
           // don't go past the end of our data
@@ -75,23 +76,27 @@ TODO (valkyrie): look at that image thing for the mapclusterer; it's possible th
             return;
           }
           // skip things that are inactive
-          if (club_data[active_col] == 'FALSE') {
+          if (club_data[active_col] != 'TRUE') {
             return;
           }
 
-          // otherwise, make a marker for it if there is data
-
+          // otherwise, make a marker for it
           var info_window_string = `<div id="content">
             <div id="siteNotice"></div>
             <h1 id="firstHeading" class="firstHeading">
               ${club_data[name_col]} : ${club_data[city_col]}, ${club_data[country_col]}
             </h1>
-            <div id="bodyContent">
-              <p>
-                <a href="${club_data[url_col]}">Website</a>
+            <div id="bodyContent">`
+          if (club_data[url_col] != '') {
+            info_window_string += `<p>
+                  <a href="${club_data[url_col]}">Website</a>
+                </p>`;
+          }
+          info_window_string += `<p>
+                Contact ${club_data[contact_person_col]} via ${club_data[contact_method_col]}
               </p>
               <p>
-                Contact ${club_data[contact_person_col]} via ${club_data[contact_method_col]}
+              ${club_data[description_col]}
               </p>
             </div>
             </div>`;
