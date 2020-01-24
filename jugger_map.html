@@ -75,10 +75,10 @@ TODO (valkyrie): look at that image thing for the mapclusterer; it's possible th
           if (club_data[name_col] == '') {
             return;
           }
-          // skip things that are inactive
-          if (club_data[active_col] != 'TRUE') {
-            return;
-          }
+          // // skip things that are inactive
+          // if (club_data[active_col] != 'TRUE') {
+          //   return;
+          // }
 
           // otherwise, make a marker for it
           var info_window_string = `<div id="content">
@@ -92,10 +92,19 @@ TODO (valkyrie): look at that image thing for the mapclusterer; it's possible th
                   <a href="${club_data[url_col]}">Website</a>
                 </p>`;
           }
+          if (club_data[contact_person_col] != '' || club_data[contact_method_col] != '') {
+            info_window_string += `<p>
+                  Contact ${club_data[contact_person_col]}`
+            if(club_data[contact_method_col] != '') {
+              info_window_string += ` via ${club_data[contact_method_col]}
+                </p>`
+            }
+          } else {
+            info_window_string += `<p>
+                  Contact info unknown
+                  </p>`
+          }
           info_window_string += `<p>
-                Contact ${club_data[contact_person_col]} via ${club_data[contact_method_col]}
-              </p>
-              <p>
               ${club_data[description_col]}
               </p>
             </div>
