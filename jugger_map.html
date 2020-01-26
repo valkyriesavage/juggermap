@@ -10,7 +10,7 @@ TODO (valkyrie): look at that image thing for the mapclusterer; it's possible th
       /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
       #map {
-        height: 100%;
+        height: 90%;
       }
       /* Optional: Makes the sample page fill the window. */
       html, body {
@@ -22,6 +22,11 @@ TODO (valkyrie): look at that image thing for the mapclusterer; it's possible th
   </head>
   <body>
     <div id="map"></div>
+    <div id="controls">
+      Show inactive clubs: <input type="checkbox" id="showInactive" onclick="setShowInactive()">
+      Show armored clubs: <input type="checkbox" id="showArmored" onclick="setShowArmored()">
+      Clubs visible: <span id="numMarkers">0</span>
+    </div>
 
     <pre id="content" style="white-space: pre-wrap;"></pre>
 
@@ -33,6 +38,8 @@ TODO (valkyrie): look at that image thing for the mapclusterer; it's possible th
       // this is an extremely aggressive range. :D
       var RANGE = 'A1:ZZ10000'
       var spreadsheet_url =  `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_KEY}/values/${RANGE}?key=${API_KEY}`
+      var spreadsheet_data = [];
+      var num_markers = 0;
 
       /**
        * Get all the data from the spreadsheet!
@@ -47,11 +54,13 @@ TODO (valkyrie): look at that image thing for the mapclusterer; it's possible th
         fetch(spreadsheet_url).then(function(response) {
             return response.json();
           }).then(function(result) {
-            initMap(result.values);
+            spreadsheet_data = result.values;
+            initMap();
           });
       }
 
-      function initMap(spreadsheet_data) {
+      function initMap() {
+        num_markers = 0;
 
         var map = new google.maps.Map(document.getElementById('map'), {
           zoom: 3,
@@ -68,17 +77,24 @@ TODO (valkyrie): look at that image thing for the mapclusterer; it's possible th
         var contact_person_col = spreadsheet_data[0].indexOf('Contact Person');
         var contact_method_col = spreadsheet_data[0].indexOf('Contact Method');
         var active_col = spreadsheet_data[0].indexOf('Active?');
+        var armored_col = spreadsheet_data[0].indexOf('Armored?');
         var description_col = spreadsheet_data[0].indexOf('Description');
-        var image = 'skull.png';
         var markers = spreadsheet_data.slice(1).map(function(club_data, i) {
-          // don't go past the end of our data
-          if (club_data[name_col] == '') {
-            return;
+          console.log(club_data[active_col], club_data[armored_col], club_data[name_col]);
+          // images for things that are or are not to be shown
+          var image = 'skull.png';
+          if (club_data[active_col] != 'TRUE') {
+            if (! showInactive) {
+              return;
+            }
+            image = 'skull_gray.png'
           }
-          // // skip things that are inactive
-          // if (club_data[active_col] != 'TRUE') {
-          //   return;
-          // }
+          if (club_data[armored_col] == 'TRUE') {
+            if (! showArmored) {
+              return;
+            }
+            image = 'skull_red.png'
+          }
 
           // otherwise, make a marker for it
           var info_window_string = `<div id="content">
@@ -92,6 +108,9 @@ TODO (valkyrie): look at that image thing for the mapclusterer; it's possible th
                   <a href="${club_data[url_col]}">Website</a>
                 </p>`;
           }
+          if (club_data[armored_col] == 'TRUE') {
+            info_window_string += '<p>Armored jugger club</p>'
+          }
           if (club_data[contact_person_col] != '' || club_data[contact_method_col] != '') {
             info_window_string += `<p>
                   Contact ${club_data[contact_person_col]}`
@@ -99,6 +118,8 @@ TODO (valkyrie): look at that image thing for the mapclusterer; it's possible th
               info_window_string += ` via ${club_data[contact_method_col]}
                 </p>`
             }
+          } else if (club_data[active_col] != 'TRUE') {
+            info_window_string += '<p>Inactive</p>'
           } else {
             info_window_string += `<p>
                   Contact info unknown
@@ -123,13 +144,32 @@ TODO (valkyrie): look at that image thing for the mapclusterer; it's possible th
           marker.addListener('click', function() {
             infowindow.open(map, marker);
           });
+          num_markers = num_markers + 1;
+          document.getElementById("numMarkers").innerHTML = num_markers;
 
           return marker;
+        });
+
+        // strip out null markers before sending it on to avoid pissing off the clusterer
+        markers = markers.filter(function(marker) {
+          return marker != undefined;
         });
 
         // Add a marker clusterer to manage the markers.
         var markerCluster = new MarkerClusterer(map, markers,
             {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
+      }
+
+      var showInactive = false;
+      var showArmored = false;
+
+      function setShowInactive() {
+        showInactive = document.getElementById("showInactive").checked;
+        initMap();
+      }
+      function setShowArmored() {
+        showArmored = document.getElementById("showArmored").checked;
+        initMap();
       }
 
     </script>
